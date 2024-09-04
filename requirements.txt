@@ -1,0 +1,6 @@
+apscheduler # allows us to run a task on some interval
+fastapi[standard] # slim api server with validation
+requests # used to make http requests
+pickledb # used to store data in memory during runtime
+pytest # used for unit testing
+pylint # used for linting code
