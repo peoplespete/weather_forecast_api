@@ -1,4 +1,6 @@
 '''Main API logic'''
+import os
+import json
 from typing import Annotated
 from datetime import datetime
 from contextlib import asynccontextmanager
@@ -8,9 +10,16 @@ import pickledb
 from fastapi import FastAPI, HTTPException, Depends, Query
 from apscheduler.schedulers.background import BackgroundScheduler
 
-LAT = 41.8826
-LON = -87.6233
 REQUEST_TIMEOUT = 5
+INTERVAL_MINUTES = int(os.environ.get('INTERVAL_MINUTES', 60)) # defaults to 1 hour
+
+# load location lat/lon from json config file
+with open('app/config.json', encoding='utf-8') as f:
+    config = json.load(f)['location']
+    LAT = config['lat']
+    LON = config['lon']
+
+# creates super lightweight key value datastore
 db = pickledb.load('tiny.db', False)
 
 def fetch_forecast():
@@ -43,7 +52,7 @@ async def lifespan(_app):
     '''Makes sure that data collection happens in the background while FastAPI is running'''
     fetch_forecast()
     scheduler = BackgroundScheduler()
-    scheduler.add_job(fetch_forecast, 'interval', hours=1)
+    scheduler.add_job(fetch_forecast, 'interval', minutes=INTERVAL_MINUTES)
     scheduler.start()
     yield
     db.dump()
